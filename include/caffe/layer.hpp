@@ -10,7 +10,7 @@
 #include "caffe/layer_factory.hpp"
 #include "caffe/proto/caffe.pb.h"
 #include "caffe/util/math_functions.hpp"
-#include "caffe/util/benchmark.hpp"
+
 /**
  Forward declare boost::thread instead of including boost/thread.hpp
  to avoid a boost/NVCC issues (#1009, #1010) on OSX.
@@ -48,7 +48,6 @@ class Layer {
           blobs_[i]->FromProto(layer_param_.blobs(i));
         }
       }
-      test_time_ = 0;
     }
   virtual ~Layer() {}
 
@@ -72,7 +71,6 @@ class Layer {
     LayerSetUp(bottom, top);
     Reshape(bottom, top);
     SetLossWeights(top);
-    //WeightAlign();
   }
 
   /**
@@ -93,17 +91,6 @@ class Layer {
    */
   virtual void LayerSetUp(const vector<Blob<Dtype>*>& bottom,
       const vector<Blob<Dtype>*>& top) {}
-
-  /*
-   * typically for convolutional layers, to align nonzero weights together
-   * */
-  virtual void WeightAlign() {}
-
-  /*
-   * time consumption
-   * */
-  virtual double GetTestTime() { return test_time_;}
-  virtual void SetTestTime(double t) { test_time_ = t;}
 
   /**
    * @brief Whether a layer should be shared by multiple nets during data
@@ -329,6 +316,17 @@ class Layer {
     param_propagate_down_[param_id] = value;
   }
 
+  inline Phase phase() { return phase_; }
+
+  /**
+   * @brief set phase
+   *        enable train and test with one network, for saving memory
+  */
+  virtual inline void set_phase(Phase phase) {
+    phase_ = phase;
+  }
+
+
 
  protected:
   /** The protobuf that stores the layer parameters */
@@ -343,8 +341,6 @@ class Layer {
   /** The vector that indicates whether each top blob has a non-zero weight in
    *  the objective function. */
   vector<Dtype> loss_;
-
-  double test_time_;
 
   /** @brief Using the CPU device, compute the layer output. */
   virtual void Forward_cpu(const vector<Blob<Dtype>*>& bottom,
@@ -468,13 +464,10 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   // Lock during forward to ensure sequential forward
   Lock();
   Dtype loss = 0;
-  Timer timer;
   Reshape(bottom, top);
   switch (Caffe::mode()) {
   case Caffe::CPU:
-	timer.Start();
     Forward_cpu(bottom, top);
-    timer.Stop();
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
       const int count = top[top_id]->count();
@@ -484,9 +477,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
     }
     break;
   case Caffe::GPU:
-	timer.Start();
     Forward_gpu(bottom, top);
-    timer.Stop();
 #ifndef CPU_ONLY
     for (int top_id = 0; top_id < top.size(); ++top_id) {
       if (!this->loss(top_id)) { continue; }
@@ -502,9 +493,7 @@ inline Dtype Layer<Dtype>::Forward(const vector<Blob<Dtype>*>& bottom,
   default:
     LOG(FATAL) << "Unknown caffe mode.";
   }
-  test_time_ = timer.MicroSeconds();
   Unlock();
-  //LOG(INFO)<<"Test time of "<< layer_param_.name()<<":\t"<< (test_time_/1000)<<"\t\tms";
   return loss;
 }
 

@@ -395,6 +395,17 @@ message LayerParameter {
   // for their implementation. These layers include an Engine type and
   // engine parameter for selecting the implementation.
   // The default for the engine is set by the ENGINE switch at compile-time.
+
+  //added for R-FCN
+  optional PSROIPoolingParameter psroi_pooling_param = 149;
+  optional ROIPoolingParameter roi_pooling_param = 147;
+  optional BoxAnnotatorOHEMParameter box_annotator_ohem_param = 150;
+  optional SmoothL1LossParameter smooth_l1_loss_param = 148;
+  optional MILDataParameter mil_data_param = 0x004d4944; //"MID"
+  optional MILParameter mil_param = 0x004d494c; //"MIL"
+
+  //added for R-FCN
+
   optional AccuracyParameter accuracy_param = 102;
   optional ArgMaxParameter argmax_param = 103;
   optional BatchNormParameter batch_norm_param = 139;
@@ -483,13 +494,17 @@ message LossParameter {
     // Divide by the batch size.
     BATCH_SIZE = 2;
     // Do not normalize the loss.
-    NONE = 3;
+    PRE_FIXED = 3;
+    NONE = 4;
+
   }
   optional NormalizationMode normalization = 3 [default = VALID];
   // Deprecated.  Ignored if normalization is specified.  If normalization
   // is not specified, then setting this to false will be equivalent to
   // normalization = BATCH_SIZE to be consistent with previous behavior.
   optional bool normalize = 2;
+  //pre-fixed normalizer
+  optional float pre_fixed_normalizer = 4 [default = 1];
 }
 
 // Messages that store parameters used by individual layer types follow, in
@@ -544,6 +559,11 @@ message BatchNormParameter {
   // Small value to add to the variance estimate so that we don't divide by
   // zero.
   optional float eps = 3 [default = 1e-5];
+}
+
+message BoxAnnotatorOHEMParameter {
+  required uint32 roi_per_img = 1; // number of rois for training
+  optional int32 ignore_label = 2 [default = -1]; // ignore_label in scoring
 }
 
 message BiasParameter {
@@ -709,6 +729,7 @@ message DataParameter {
 
 message DropoutParameter {
   optional float dropout_ratio = 1 [default = 0.5]; // dropout ratio
+  optional bool scale_train = 2 [default = true];  // scale train or test phase
 }
 
 // DummyDataLayer fills any number of arbitrarily shaped blobs with random
@@ -964,6 +985,12 @@ message PowerParameter {
   optional float shift = 3 [default = 0.0];
 }
 
+message PSROIPoolingParameter {
+   required float spatial_scale = 1; 
+   required int32 output_dim = 2; // output channel number
+   required int32 group_size = 3; // number of groups to encode position-sensitive score maps
+ }
+
 message PythonParameter {
   optional string module = 1;
   optional string layer = 2;
@@ -1105,7 +1132,16 @@ message ReshapeParameter {
   optional int32 axis = 2 [default = 0];
   optional int32 num_axes = 3 [default = -1];
 }
-
+// Message that stores parameters used by ROIPoolingLayer
+message ROIPoolingParameter {
+  // Pad, kernel size, and stride are all given as a single value for equal
+  // dimensions in height and width or as Y, X pairs.
+  optional uint32 pooled_h = 1 [default = 0]; // The pooled output height
+  optional uint32 pooled_w = 2 [default = 0]; // The pooled output width
+  // Multiplicative spatial scale factor to translate ROI coords from their
+  // input scale to the scale used when pooling
+  optional float spatial_scale = 3 [default = 1];
+}
 message ScaleParameter {
   // The first axis of bottom[0] (the first input Blob) along which to apply
   // bottom[1] (the second input Blob).  May be negative to index from the end
@@ -1163,6 +1199,13 @@ message SliceParameter {
   optional uint32 slice_dim = 1 [default = 1];
 }
 
+message SmoothL1LossParameter {
+  // SmoothL1Loss(x) =
+  //   0.5 * (sigma * x) ** 2    -- if x < 1.0 / sigma / sigma
+  //   |x| - 0.5 / sigma / sigma -- otherwise
+  optional float sigma = 1 [default = 1];
+}
+
 // Message that stores parameters used by SoftmaxLayer, SoftmaxWithLossLayer
 message SoftmaxParameter {
   enum Engine {
@@ -1201,6 +1244,15 @@ message ThresholdParameter {
   optional float threshold = 1 [default = 0]; // Strictly positive values
 }
 
+// Message that stores parameters used by MILLayer
+message MILParameter {
+  enum MILType {
+    MAX = 0;
+    NOR = 1;
+  }
+  optional MILType type = 1 [default = MAX]; // The MIL method
+}
+
 message WindowDataParameter {
   // Specify the data source.
   optional string source = 1;
@@ -1232,6 +1284,35 @@ message WindowDataParameter {
   optional bool cache_images = 12 [default = false];
   // append root_folder to locate images
   optional string root_folder = 13 [default = ""];
+}
+
+message MILDataParameter {
+  // Specify the data source.
+  optional string source = 1;
+  
+  // Number of scales for each image
+  optional uint32 num_scales = 2 [default = 1];
+  
+  // Side length ratio between neighbouring scales
+  optional float scale_factor = 6 [default = 1];
+  
+  // Number of channels in the image
+  optional uint32 channels = 4 [default = 3];
+  
+  // Specify the number of images per batch
+  optional uint32 images_per_batch = 3;
+  // Specify the number of classes
+  optional uint32 n_classes = 5;
+  // specify the box_dir and label_dir
+  optional string label_file = 7;
+  
+  // Root directory which contains all the images
+  optional string root_dir = 11;
+  // Extention for the file
+  optional string ext = 12;
+  
+  // To randomize or not
+  optional bool randomize = 13 [default = true];
 }
 
 message SPPParameter {

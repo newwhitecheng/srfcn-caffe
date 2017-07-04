@@ -21,6 +21,8 @@ classdef Net < handle
     name2blob_index
     layer_names
     blob_names
+    bottom_id_vecs
+    top_id_vecs
   end
   
   methods
