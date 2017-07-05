@@ -60,13 +60,15 @@ layer {
   top: "conv1"
   param {
     lr_mult: 1
-    decay_mult: 1
+    decay_mult: 1.0
     kernel_shape_decay_mult: 0.0
     breadth_decay_mult: 1.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   convolution_param {
     num_output: 96
@@ -117,13 +119,15 @@ layer {
   top: "conv2"
   param {
     lr_mult: 1
-    decay_mult: 1
-    kernel_shape_decay_mult: 1.0
+    decay_mult: 1.0
+    kernel_shape_decay_mult: 0.5
     breadth_decay_mult: 1.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -176,12 +180,14 @@ layer {
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 1.7321
+    kernel_shape_decay_mult: 1.0
     breadth_decay_mult: 1.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   convolution_param {
     num_output: 384
@@ -211,12 +217,14 @@ layer {
   param {
     lr_mult: 1
     decay_mult: 1
-    kernel_shape_decay_mult: 1.2247
-    breadth_decay_mult: 1.0
+    kernel_shape_decay_mult: 1.0
+    breadth_decay_mult: 0.5
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   convolution_param {
     num_output: 384
@@ -253,6 +261,8 @@ layer {
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   convolution_param {
     num_output: 256
@@ -294,10 +304,14 @@ layer {
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1.0
+    breadth_decay_mult: 1.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   inner_product_param {
     num_output: 4096
@@ -334,10 +348,14 @@ layer {
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1.0
+    breadth_decay_mult: 1.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   inner_product_param {
     num_output: 4096
@@ -374,10 +392,14 @@ layer {
   param {
     lr_mult: 1
     decay_mult: 1
+    kernel_shape_decay_mult: 1.0
+    breadth_decay_mult: 0.0
   }
   param {
     lr_mult: 2
     decay_mult: 0
+    kernel_shape_decay_mult: 0.0
+    breadth_decay_mult: 0.0
   }
   inner_product_param {
     num_output: 1000
